@@ -1,4 +1,6 @@
+import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
 
 
 public class CacheManager {
@@ -12,13 +14,19 @@ public class CacheManager {
 		DiskWatcher dw = new DiskWatcher();
 		Thread watcher = new Thread(dw);
 		watcher.run();
+		/*
+		try {
+			Desktop.getDesktop().open(root);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}*/
 	}
 	
 	public class DiskWatcher implements Runnable{
 
 		@Override
 		public void run() {
-			
+			System.out.println("in thread");
 		}
 		
 	}

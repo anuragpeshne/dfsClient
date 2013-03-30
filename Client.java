@@ -15,6 +15,7 @@ public class Client {
 	PrintWriter writer;
 	BufferedReader reader;
 	String token;
+	Console console;
 	
 	public static void main(String[] args) {
 		CacheManager cacheManager = new CacheManager();
@@ -23,6 +24,8 @@ public class Client {
 	}
 	
 	public Client() {
+		console = new Console(this);
+		console.start();
 		this.setupNetworking();
 	}
 	
@@ -32,7 +35,9 @@ public class Client {
 			InputStreamReader streamReader = new InputStreamReader(sock.getInputStream());
 			reader = new BufferedReader(streamReader);
 			writer = new PrintWriter(sock.getOutputStream());
+			console.logScreen.append("Connected to "+ Client.serverIp +":"+ Client.serverPort+"\n");
 		} catch (IOException e) {
+			console.logScreen.append("Connection Failed!\n");
 			e.printStackTrace();
 		}
 	}
@@ -41,15 +46,28 @@ public class Client {
 		String req = "CONNECT" + " " + username + " " + password;
 		while(!authenticated) {
 			writer.println(req);
+			writer.flush();
 			try {
 				String response = reader.readLine();
 				String[] responses = response.split(" ");
 				if(responses[0].compareTo("CONNECT") == 0)
-					if(responses[1].compareTo("200") == 0)
+					if(responses[1].compareTo("200") == 0) {
 						this.token = responses[2];
+						this.console.logScreen.append("Authentication Successful\n");
+						authenticated = true;
+					}
+					else if(responses[2].compareTo("401") == 0) {
+						this.console.logScreen.append("Authentication Failed\n");
+						break;
+					}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
+	}
+	public void getFile(String filename) {
+		String req = "GET " + this.token + " " + filename;
+		writer.println(req);
+		writer.flush();
 	}
 }
