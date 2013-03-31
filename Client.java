@@ -19,11 +19,12 @@ public class Client {
 	CacheManager cacheManager;
 	
 	public static void main(String[] args) {
+		@SuppressWarnings("unused")
 		Client client = new Client();
 	}
 	
 	public Client() {
-		cacheManager = new CacheManager();
+		cacheManager = new CacheManager(this);
 		console = new Console(this);
 		this.setupNetworking();
 		this.authenticate();
@@ -102,6 +103,34 @@ public class Client {
 		this.console.logScreen.append("Unknown Response from server\n");
 		return null;
 	}
+	
+	public void putFile(String filename, String content) {
+		String req = "PUT " + this.token + " " + filename;
+		writer.println(req);
+		writer.flush();
+		String response = null;
+		try {
+			response = reader.readLine();
+			String[] responseS = response.split(" ");
+			if(responseS[0].compareTo("PUT") == 0)
+				if(responseS[1].compareTo("200") == 0) {
+					writer.print(content);
+					writer.println("\n$$EOF$$");
+					writer.flush();
+					response = reader.readLine();
+					if(response.compareTo("200") == 0) {
+						this.console.logScreen.append(filename + " written successfully\n");
+						this.console.generateButtons();
+					}
+				}
+				else
+					this.console.logScreen.append("Unable to write file " + filename + "\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
 	private String collectResponse() {
 		String response = "", buffer;
 		try {
@@ -112,5 +141,32 @@ public class Client {
 			e.printStackTrace();
 		}
 		return response;
+	}
+	public void closeSocket() {
+		try {
+			this.sock.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void fileDeleted(String fileName) {
+		String req = "DEL " + this.token + " " + fileName;
+		writer.println(req);
+		writer.flush();
+		String response = null;
+		try {
+			response = reader.readLine();
+			String[] responseS = response.split(" ");
+			if(responseS[0].compareTo("DEL") == 0)
+				if(responseS[1].compareTo("200") == 0) {
+					this.console.logScreen.append(fileName + " deleted successfully\n");
+					this.console.generateButtons();
+				}
+				else
+					this.console.logScreen.append("Unable to delete file " + fileName + "\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

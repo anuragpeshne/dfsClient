@@ -41,7 +41,7 @@ public class Console implements ActionListener{
 		client.getFile(pressedButton.getName());
 	}
 	
-	private void generateButtons() {
+	public void generateButtons() {
 		String contentList = client.listDir("/");
 		contentList = contentList.trim();
 		String[] contentArray = contentList.split(",");
