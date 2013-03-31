@@ -17,8 +17,6 @@ public class Console implements ActionListener{
 	
 	public Console(Client c) {
 		this.client = c;
-	}
-	public void start() {
 		frame = new JFrame("Console");
 		panel = new JPanel();
 		logScreen = new JTextArea(15,25);
@@ -26,13 +24,13 @@ public class Console implements ActionListener{
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 		frame.getContentPane().add(BorderLayout.EAST, logScreen);
 		frame.getContentPane().add(BorderLayout.CENTER,panel);
-		
-		this.generateButtons();
-				
 		frame.setAlwaysOnTop(true);
 		frame.setSize(500,600);
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	public void start() {
+		this.generateButtons();
 	}
 
 	@Override
@@ -44,15 +42,20 @@ public class Console implements ActionListener{
 	}
 	
 	private void generateButtons() {
-		String[] dummy = {"fr1", "fr2", "fr3", "fr4", "fr5", "fr6", "fr7", "fr8", "fr9" };
-		JButton[] buttonSet = new JButton[dummy.length];
+		String contentList = client.listDir("/");
+		contentList = contentList.trim();
+		String[] contentArray = contentList.split(",");
+		JButton[] buttonSet = new JButton[contentArray.length];
 		int i = 0;
-		for(String butName : dummy) {
-			buttonSet[i] = new JButton(butName);
-			buttonSet[i].setName(butName);
-			buttonSet[i].addActionListener(this);
-			panel.add(buttonSet[i]);
-			i++;
+		for(String butName : contentArray) {
+			if(butName.compareTo("") != 0) {
+				buttonSet[i] = new JButton(butName);
+				buttonSet[i].setName(butName);
+				buttonSet[i].addActionListener(this);
+				panel.add(buttonSet[i]);
+				i++;
+			}
 		}
+		panel.revalidate();
 	}
 }

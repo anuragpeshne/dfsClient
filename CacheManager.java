@@ -1,5 +1,7 @@
 import java.awt.Desktop;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 
@@ -29,5 +31,20 @@ public class CacheManager {
 			System.out.println("in thread");
 		}
 		
+	}
+
+	public void writeToDisk(String filename, String response) {
+		File f = new File(clientRoot + filename);
+		if(f.exists())
+			f.delete();
+		try {
+			f.createNewFile();
+			FileWriter fw = new FileWriter(f);
+			BufferedWriter writer = new BufferedWriter(fw);
+			writer.write(response);
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

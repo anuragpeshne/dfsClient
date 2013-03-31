@@ -16,17 +16,18 @@ public class Client {
 	BufferedReader reader;
 	String token;
 	Console console;
+	CacheManager cacheManager;
 	
 	public static void main(String[] args) {
-		CacheManager cacheManager = new CacheManager();
 		Client client = new Client();
-		client.authenticate();
 	}
 	
 	public Client() {
+		cacheManager = new CacheManager();
 		console = new Console(this);
-		console.start();
 		this.setupNetworking();
+		this.authenticate();
+		console.start();
 	}
 	
 	private void setupNetworking() {
@@ -69,5 +70,47 @@ public class Client {
 		String req = "GET " + this.token + " " + filename;
 		writer.println(req);
 		writer.flush();
+		String response = null;
+		try {
+			response = reader.readLine();
+			String[] responseS = response.split(" ");
+			if(responseS[0].compareTo("GET") == 0)
+				if(responseS[1].compareTo("200") == 0) {
+					cacheManager.writeToDisk(filename,this.collectResponse());
+					this.console.logScreen.append(filename + " received\n");
+				}
+				else
+					this.console.logScreen.append("Some error in getting file\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	public String listDir(String dirName) {
+		String req = "LIST " + this.token + " " + dirName;
+		writer.println(req);
+		writer.flush();
+		String response = null;
+		try {
+			response = reader.readLine();
+			String[] responseS = response.split(" ");
+			if(responseS[0].compareTo("LIST") == 0)
+				if(responseS[1].compareTo("200") == 0)
+					return(this.collectResponse());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		this.console.logScreen.append("Unknown Response from server\n");
+		return null;
+	}
+	private String collectResponse() {
+		String response = "", buffer;
+		try {
+			while((buffer = reader.readLine()).compareTo("$$EOF$$") != 0) {
+				response += buffer + "\n";
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return response;
 	}
 }
