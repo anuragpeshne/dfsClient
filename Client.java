@@ -8,6 +8,7 @@ import java.net.Socket;
 public class Client {
 	public static final String serverIp = "127.0.0.1";
 	public static final int serverPort = 8080;
+	public static final int maxCacheSize = 1000;		//in KB
 	
 	private static final String username = "root";
 	private static final String password = "root123";
@@ -74,7 +75,7 @@ public class Client {
 		String response = null;
 		try {
 			response = reader.readLine();
-			String[] responseS = response.split(" ");
+			String[] responseS = processResponse(response);
 			if(responseS[0].compareTo("GET") == 0)
 				if(responseS[1].compareTo("200") == 0) {
 					cacheManager.writeToDisk(filename,this.collectResponse());
@@ -93,7 +94,7 @@ public class Client {
 		String response = null;
 		try {
 			response = reader.readLine();
-			String[] responseS = response.split(" ");
+			String[] responseS = processResponse(response);
 			if(responseS[0].compareTo("LIST") == 0)
 				if(responseS[1].compareTo("200") == 0)
 					return(this.collectResponse());
@@ -111,7 +112,7 @@ public class Client {
 		String response = null;
 		try {
 			response = reader.readLine();
-			String[] responseS = response.split(" ");
+			String[] responseS = processResponse(response);
 			if(responseS[0].compareTo("PUT") == 0)
 				if(responseS[1].compareTo("200") == 0) {
 					writer.print(content);
@@ -150,7 +151,7 @@ public class Client {
 		String response = null;
 		try {
 			response = reader.readLine();
-			String[] responseS = response.split(" ");
+			String[] responseS = processResponse(response);
 			if(responseS[0].compareTo("DEL") == 0)
 				if(responseS[1].compareTo("200") == 0) {
 					this.console.logScreen.append(fileName + " deleted successfully\n");
@@ -161,5 +162,18 @@ public class Client {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	private String[] processResponse(String response) {
+		String[] responseS = response.split(" ");
+		if(responseS[0].compareTo("UPDATE") == 0) {
+			this.console.logScreen.append("Notification:" + responseS[1] + " Updated at server");
+			try {
+				String newLine = reader.readLine();
+				responseS = newLine.split(" ");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return responseS;
 	}
 }

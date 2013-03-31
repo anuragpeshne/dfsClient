@@ -25,6 +25,7 @@ public class CacheManager {
 	Thread watcher;
 	boolean monitor;
 	boolean eventDetected;
+	int cacheSize;
 	
 	public CacheManager(Client c) {
 		this.client = c;
@@ -114,6 +115,7 @@ public class CacheManager {
 
 	public void newFileEdited(String fileName) {
 		this.newFileCreated(fileName);
+		moderateCache();
 	}
 
 
@@ -138,6 +140,29 @@ public class CacheManager {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		}
+		moderateCache();
+	}
+	
+	private void moderateCache() {
+		int size = 0;
+		File rootDir = new File(CacheManager.clientRoot);
+		File[] files = rootDir.listFiles();
+		File eldest = null;
+		long lastModifiedTime = 0;
+		for(File tempFile : files) {
+			size += tempFile.length();
+			if(tempFile.lastModified() > lastModifiedTime) {
+				lastModifiedTime = tempFile.lastModified();
+				eldest = tempFile;
+			}	
+		} 
+		if(size > Client.maxCacheSize) {
+			this.monitor = false;
+			eldest.delete();
+			this.client.console.logScreen.append(eldest.getName() + " removed from cache");
+			while(!this.eventDetected);
+			this.monitor = true;
 		}
 	}
 }
