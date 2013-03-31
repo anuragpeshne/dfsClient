@@ -12,6 +12,7 @@ import javax.swing.JTextArea;
 public class Console implements ActionListener{
 	private JFrame frame;
 	private JPanel panel;
+	JButton refreshButton;
 	JTextArea logScreen;
 	Client client;
 	
@@ -21,9 +22,12 @@ public class Console implements ActionListener{
 		panel = new JPanel();
 		logScreen = new JTextArea(15,25);
 		logScreen.setEditable(false);
+		refreshButton = new JButton("Refesh");
+		refreshButton.addActionListener(new refreshListener());
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 		frame.getContentPane().add(BorderLayout.EAST, logScreen);
 		frame.getContentPane().add(BorderLayout.CENTER,panel);
+		frame.getContentPane().add(BorderLayout.SOUTH,refreshButton);
 		frame.setAlwaysOnTop(true);
 		frame.setSize(500,600);
 		frame.setVisible(true);
@@ -36,12 +40,17 @@ public class Console implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		JButton pressedButton = (JButton) arg0.getSource();
+		this.client.cacheManager.monitor = false;
 		this.logScreen.append(pressedButton.getName() + " requested...\n");
 		System.out.println("Get File" + pressedButton.getName());
 		client.getFile(pressedButton.getName());
+		while(!client.cacheManager.eventDetected);
+		this.client.cacheManager.monitor = true;
 	}
 	
 	public void generateButtons() {
+		panel.removeAll();
+		panel.revalidate();
 		String contentList = client.listDir("/");
 		contentList = contentList.trim();
 		String[] contentArray = contentList.split(",");
@@ -56,6 +65,13 @@ public class Console implements ActionListener{
 				i++;
 			}
 		}
-		panel.revalidate();
+	}
+	public class refreshListener implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			generateButtons();
+		}
+		
 	}
 }

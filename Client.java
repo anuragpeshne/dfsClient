@@ -115,7 +115,7 @@ public class Client {
 			if(responseS[0].compareTo("PUT") == 0)
 				if(responseS[1].compareTo("200") == 0) {
 					writer.print(content);
-					writer.println("\n$$EOF$$");
+					writer.println("$$EOF$$");
 					writer.flush();
 					response = reader.readLine();
 					if(response.compareTo("200") == 0) {
@@ -141,13 +141,6 @@ public class Client {
 			e.printStackTrace();
 		}
 		return response;
-	}
-	public void closeSocket() {
-		try {
-			this.sock.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	public void fileDeleted(String fileName) {

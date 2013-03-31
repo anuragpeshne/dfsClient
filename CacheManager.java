@@ -22,16 +22,21 @@ import java.nio.file.WatchService;
 public class CacheManager {
 	public static final String clientRoot = System.getProperty("user.home") + "/DFCRoot/";
 	private Client client;
+	Thread watcher;
+	boolean monitor;
+	boolean eventDetected;
 	
 	public CacheManager(Client c) {
 		this.client = c;
+		monitor = true;
+		eventDetected = false;
 		File root = new File(clientRoot);
 		if(!root.exists())
 			root.mkdir();
 		
 		DiskWatcher dw = new DiskWatcher();
-		Thread watcher = new Thread(dw);
-		watcher.run();
+		watcher = new Thread(dw);
+		watcher.start();
 		try {
 			Desktop.getDesktop().open(root);
 		} catch (IOException e) {
@@ -48,7 +53,6 @@ public class CacheManager {
 				ws = fs.newWatchService();
 				Path pth = Paths.get(CacheManager.clientRoot);
 				pth.register(ws, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
-				boolean loop = true;
 				WatchKey wk = null;
 				WatchEvent<?> lastEvent = null;
 				do {
@@ -58,23 +62,31 @@ public class CacheManager {
 							//Path eventPath = (Path) event.context();
 							lastEvent = event;
 						}
-						wk.reset();
 						WatchEvent.Kind<?> kind = lastEvent.kind();
 						Path eventPath = (Path) lastEvent.context();
 						System.out.println(eventPath.getFileName() + "->" + kind.toString());
 						String fileName = eventPath.getFileName().toString();
-						if(fileName.charAt(0) != '.') {
-							if(kind.toString().compareTo("ENTRY_CREATE") == 0) {
-								CacheManager.this.newFileCreated(fileName);
+						if(fileName.charAt(0) != '.' && fileName.charAt(fileName.length() - 1) != '~') {
+							if(monitor) {
+								if(kind.toString().compareTo("ENTRY_CREATE") == 0) {
+									CacheManager.this.client.console.logScreen.append(fileName + " created.\nUpdating at server...\n");
+									CacheManager.this.newFileCreated(fileName);
+									
+								}
+								else if(kind.toString().compareTo("ENTRY_DELETE") == 0) {
+									CacheManager.this.client.console.logScreen.append(fileName + " deleted.\nUpdating at server...\n");
+									CacheManager.this.newFileDeleted(fileName);
+									
+								}
+								else if(kind.toString().compareTo("ENTRY_MODIFY") == 0) {
+									CacheManager.this.client.console.logScreen.append(fileName + " edited.\nUpdating at server...\n");
+									CacheManager.this.newFileEdited(fileName);
+								}
 							}
-							else if(kind.toString().compareTo("ENTRY_DELETE") == 0) {
-								CacheManager.this.newFileDeleted(fileName);
-							}
-							else if(kind.toString().compareTo("ENTRY_MODIFY") == 0) {
-								CacheManager.this.newFileEdited(fileName);
-							}
+							else
+								eventDetected = true;
 						}
-				} while(loop);
+				} while(wk.reset());
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (InterruptedException e) {
