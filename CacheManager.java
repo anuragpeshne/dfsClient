@@ -165,4 +165,11 @@ public class CacheManager {
 			this.monitor = true;
 		}
 	}
+	public void shutdown() {
+		File rootDir = new File(clientRoot);
+		File[] cacheFiles = rootDir.listFiles();
+		for(File tempFile : cacheFiles) {
+			tempFile.delete();
+		}
+	}
 }

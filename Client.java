@@ -10,8 +10,6 @@ public class Client {
 	public static final int serverPort = 8080;
 	public static final int maxCacheSize = 1000;		//in KB
 	
-	private static final String username = "root";
-	private static final String password = "root123";
 	private Socket sock;
 	PrintWriter writer;
 	BufferedReader reader;
@@ -25,11 +23,9 @@ public class Client {
 	}
 	
 	public Client() {
-		cacheManager = new CacheManager(this);
 		console = new Console(this);
 		this.setupNetworking();
-		this.authenticate();
-		console.start();
+		cacheManager = new CacheManager(this);
 	}
 	
 	private void setupNetworking() {
@@ -44,9 +40,9 @@ public class Client {
 			e.printStackTrace();
 		}
 	}
-	private void authenticate() {
+	public boolean authenticate(String username, String pswd) {
 		boolean authenticated = false;
-		String req = "CONNECT" + " " + username + " " + password;
+		String req = "CONNECT" + " " + username + " " + pswd;
 		while(!authenticated) {
 			writer.println(req);
 			writer.flush();
@@ -59,7 +55,7 @@ public class Client {
 						this.console.logScreen.append("Authentication Successful\n");
 						authenticated = true;
 					}
-					else if(responses[2].compareTo("401") == 0) {
+					else if(responses[1].compareTo("401") == 0) {
 						this.console.logScreen.append("Authentication Failed\n");
 						break;
 					}
@@ -67,6 +63,7 @@ public class Client {
 				e.printStackTrace();
 			}
 		}
+		return authenticated;
 	}
 	public void getFile(String filename) {
 		String req = "GET " + this.token + " " + filename;
